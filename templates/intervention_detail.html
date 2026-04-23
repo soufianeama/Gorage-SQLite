@@ -1,0 +1,102 @@
+{{define "content"}}
+{{$inv := .Data}}
+
+<div class="page-header">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="/interventions" class="btn btn-secondary btn-sm">← Retour</a>
+    <h2 class="page-title">Intervention #{{$inv.ID}}</h2>
+    <span class="badge {{statutClass $inv.Statut}}">{{statutLabel $inv.Statut}}</span>
+  </div>
+  <a href="/interventions/accueil?id={{$inv.ID}}" target="_blank" class="btn btn-secondary btn-sm">
+    📋 Fiche accueil
+  </a>
+</div>
+
+<div class="page-body">
+
+  {{if .Error}}<div class="alert alert-error">{{.Error}}</div>{{end}}
+  {{if .Success}}<div class="alert alert-success">{{.Success}}</div>{{end}}
+
+  <!-- Infos véhicule & client -->
+  <div class="grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Véhicule</span></div>
+      <div class="card-body">
+        <table style="width:100%;border:none;">
+          <tr><td style="color:var(--text-light);padding:4px 0;width:120px;">Immatriculation</td><td><strong style="font-family:monospace;letter-spacing:1px;">{{$inv.Immatriculation}}</strong></td></tr>
+          <tr><td style="color:var(--text-light);padding:4px 0;">Marque / Modèle</td><td>{{$inv.Marque}} {{$inv.Modele}}</td></tr>
+          <tr><td style="color:var(--text-light);padding:4px 0;">Propriétaire</td><td>{{$inv.ClientNom}}</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Dates</span></div>
+      <div class="card-body">
+        <table style="width:100%;border:none;">
+          <tr><td style="color:var(--text-light);padding:4px 0;width:140px;">Date d'entrée</td><td>{{dateFR $inv.DateEntree}}</td></tr>
+          <tr><td style="color:var(--text-light);padding:4px 0;">Date de sortie</td><td>{{if $inv.DateSortie}}{{dateFR $inv.DateSortie}}{{else}}<span style="color:var(--text-light)">—</span>{{end}}</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire de modification -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Détails de l'intervention</span>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="/interventions/update">
+        <input type="hidden" name="id" value="{{$inv.ID}}">
+
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea name="description" rows="2" required>{{$inv.Description}}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Diagnostic</label>
+          <textarea name="diagnostic" rows="2" placeholder="Résultat du diagnostic...">{{$inv.Diagnostic}}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Travaux effectués</label>
+          <textarea name="travaux_effectues" rows="3" placeholder="Détail des opérations réalisées...">{{$inv.TravauxEffectues}}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Pièces utilisées</label>
+          <textarea name="pieces_utilisees" rows="2" placeholder="Filtre à huile x1, Courroie de distribution...">{{$inv.PiecesUtilisees}}</textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Statut</label>
+            <select name="statut">
+              <option value="en_cours" {{if eq $inv.Statut "en_cours"}}selected{{end}}>En cours</option>
+              <option value="attente_pieces" {{if eq $inv.Statut "attente_pieces"}}selected{{end}}>Attente pièces</option>
+              <option value="termine" {{if eq $inv.Statut "termine"}}selected{{end}}>Terminé</option>
+              <option value="livre" {{if eq $inv.Statut "livre"}}selected{{end}}>Livré</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+          <button type="button" class="btn btn-danger"
+                  onclick="document.getElementById('form-delete-{{$inv.ID}}').submit()">
+            Supprimer
+          </button>
+        </div>
+      </form>
+
+      <!-- Formulaire de suppression séparé (hors du form principal) -->
+      <form id="form-delete-{{$inv.ID}}" method="POST" action="/interventions/delete"
+            onsubmit="return confirm('Supprimer définitivement cette intervention ?')" style="display:none;">
+        <input type="hidden" name="id" value="{{$inv.ID}}">
+      </form>
+    </div>
+  </div>
+
+</div>
+{{end}}

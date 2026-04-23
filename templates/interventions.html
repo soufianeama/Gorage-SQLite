@@ -1,0 +1,254 @@
+{{define "content"}}
+{{$d := .Data}}
+
+<div class="page-header">
+  <h2 class="page-title">Interventions</h2>
+  <button class="btn btn-primary" onclick="openNewModal('en_cours')">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+    Nouvelle intervention
+  </button>
+</div>
+
+<div class="page-body" style="padding-bottom:0;">
+
+  {{if .Error}}<div class="alert alert-error" style="margin-bottom:12px;">{{.Error}}</div>{{end}}
+  {{if .Success}}<div class="alert alert-success" style="margin-bottom:12px;">{{.Success}}</div>{{end}}
+
+  <!-- ═══ Kanban Board ═══ -->
+  <div class="kanban-board">
+
+    <!-- Colonne En cours -->
+    <div class="kanban-col" data-statut="en_cours"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleDrop(event,this)">
+      <div class="kanban-col-header kanban-warning">
+        <span class="kanban-col-title">En cours</span>
+        <span class="kanban-count">{{len $d.EnCours}}</span>
+        <button class="kanban-add" onclick="openNewModal('en_cours')" title="Ajouter">+</button>
+      </div>
+      <div class="kanban-cards" id="col-en_cours">
+        {{range $d.EnCours}}
+        <div class="kanban-card" draggable="true" data-id="{{.ID}}"
+             ondragstart="handleDragStart(event)">
+          <div class="kanban-card-immat">{{.Immatriculation}}</div>
+          <div class="kanban-card-sub">{{.Marque}} {{.Modele}}</div>
+          <div class="kanban-card-client">{{.ClientNom}}</div>
+          <div class="kanban-card-desc">{{.Description}}</div>
+          <div class="kanban-card-footer">
+            <span class="kanban-date">{{dateFR .DateEntree}}</span>
+            <a href="/interventions/view?id={{.ID}}" class="kanban-detail-btn">Détails →</a>
+          </div>
+        </div>
+        {{end}}
+        {{if not $d.EnCours}}<div class="kanban-empty">Aucune</div>{{end}}
+      </div>
+    </div>
+
+    <!-- Colonne Attente pièces -->
+    <div class="kanban-col" data-statut="attente_pieces"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleDrop(event,this)">
+      <div class="kanban-col-header kanban-info">
+        <span class="kanban-col-title">Attente pièces</span>
+        <span class="kanban-count">{{len $d.AttentePieces}}</span>
+        <button class="kanban-add" onclick="openNewModal('attente_pieces')" title="Ajouter">+</button>
+      </div>
+      <div class="kanban-cards" id="col-attente_pieces">
+        {{range $d.AttentePieces}}
+        <div class="kanban-card" draggable="true" data-id="{{.ID}}"
+             ondragstart="handleDragStart(event)">
+          <div class="kanban-card-immat">{{.Immatriculation}}</div>
+          <div class="kanban-card-sub">{{.Marque}} {{.Modele}}</div>
+          <div class="kanban-card-client">{{.ClientNom}}</div>
+          <div class="kanban-card-desc">{{.Description}}</div>
+          <div class="kanban-card-footer">
+            <span class="kanban-date">{{dateFR .DateEntree}}</span>
+            <a href="/interventions/view?id={{.ID}}" class="kanban-detail-btn">Détails →</a>
+          </div>
+        </div>
+        {{end}}
+        {{if not $d.AttentePieces}}<div class="kanban-empty">Aucune</div>{{end}}
+      </div>
+    </div>
+
+    <!-- Colonne Terminé -->
+    <div class="kanban-col" data-statut="termine"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleDrop(event,this)">
+      <div class="kanban-col-header kanban-success">
+        <span class="kanban-col-title">Terminé</span>
+        <span class="kanban-count">{{len $d.Termine}}</span>
+        <button class="kanban-add" onclick="openNewModal('termine')" title="Ajouter">+</button>
+      </div>
+      <div class="kanban-cards" id="col-termine">
+        {{range $d.Termine}}
+        <div class="kanban-card" draggable="true" data-id="{{.ID}}"
+             ondragstart="handleDragStart(event)">
+          <div class="kanban-card-immat">{{.Immatriculation}}</div>
+          <div class="kanban-card-sub">{{.Marque}} {{.Modele}}</div>
+          <div class="kanban-card-client">{{.ClientNom}}</div>
+          <div class="kanban-card-desc">{{.Description}}</div>
+          <div class="kanban-card-footer">
+            <span class="kanban-date">{{dateFR .DateEntree}}</span>
+            <a href="/interventions/view?id={{.ID}}" class="kanban-detail-btn">Détails →</a>
+          </div>
+        </div>
+        {{end}}
+        {{if not $d.Termine}}<div class="kanban-empty">Aucune</div>{{end}}
+      </div>
+    </div>
+
+    <!-- Colonne Livré -->
+    <div class="kanban-col" data-statut="livre"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleDrop(event,this)">
+      <div class="kanban-col-header kanban-secondary">
+        <span class="kanban-col-title">Livré</span>
+        <span class="kanban-count">{{len $d.Livre}}</span>
+        <button class="kanban-add" onclick="openNewModal('livre')" title="Ajouter">+</button>
+      </div>
+      <div class="kanban-cards" id="col-livre">
+        {{range $d.Livre}}
+        <div class="kanban-card" draggable="true" data-id="{{.ID}}"
+             ondragstart="handleDragStart(event)">
+          <div class="kanban-card-immat">{{.Immatriculation}}</div>
+          <div class="kanban-card-sub">{{.Marque}} {{.Modele}}</div>
+          <div class="kanban-card-client">{{.ClientNom}}</div>
+          <div class="kanban-card-desc">{{.Description}}</div>
+          <div class="kanban-card-footer">
+            <span class="kanban-date">{{dateFR .DateEntree}}</span>
+            <a href="/interventions/view?id={{.ID}}" class="kanban-detail-btn">Détails →</a>
+          </div>
+        </div>
+        {{end}}
+        {{if not $d.Livre}}<div class="kanban-empty">Aucune</div>{{end}}
+      </div>
+    </div>
+
+  </div><!-- /kanban-board -->
+</div>
+
+<!-- ═══ Modal : Nouvelle intervention ═══ -->
+<div class="modal-overlay" id="modal-new-inv" style="display:none;" onclick="closeModalOutside(event,'modal-new-inv')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Nouvelle intervention</span>
+      <button class="modal-close" onclick="toggleModal('modal-new-inv')">×</button>
+    </div>
+    <form method="POST" action="/interventions">
+      <input type="hidden" name="statut_initial" id="statut_initial" value="en_cours">
+      <div class="modal-body">
+
+        <div class="form-group">
+          <label>Véhicule *</label>
+          <select name="vehicule_id" required>
+            <option value="">-- Sélectionner un véhicule --</option>
+            {{range $d.Vehicules}}
+            <option value="{{.ID}}">{{.Immatriculation}} — {{.Marque}} {{.Modele}} ({{.ClientNom}})</option>
+            {{end}}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Date d'entrée *</label>
+          <input type="date" name="date_entree" value="{{today}}" required>
+        </div>
+
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea name="description" rows="3" placeholder="Ex : Vidange + filtre à huile..." required></textarea>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="toggleModal('modal-new-inv')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Créer l'intervention</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ── Modal ──────────────────────────────────────────────────
+function toggleModal(id) {
+  const m = document.getElementById(id);
+  m.style.display = m.style.display === 'none' ? 'flex' : 'none';
+}
+function closeModalOutside(e, id) {
+  if (e.target.id === id) toggleModal(id);
+}
+function openNewModal(statut) {
+  document.getElementById('statut_initial').value = statut;
+  toggleModal('modal-new-inv');
+}
+
+// ── Drag & Drop ────────────────────────────────────────────
+let draggedCard = null;
+let sourceCol   = null;
+
+function handleDragStart(e) {
+  draggedCard = e.currentTarget;
+  sourceCol   = draggedCard.closest('.kanban-col');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', draggedCard.dataset.id);
+  setTimeout(() => draggedCard.classList.add('dragging'), 0);
+}
+
+document.addEventListener('dragend', () => {
+  if (draggedCard) draggedCard.classList.remove('dragging');
+  document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+});
+
+function handleDrop(e, col) {
+  e.preventDefault();
+  col.classList.remove('drag-over');
+  if (!draggedCard) return;
+
+  const newStatut = col.dataset.statut;
+  const id        = draggedCard.dataset.id;
+
+  // Déplacer visuellement
+  const cards = col.querySelector('.kanban-cards');
+  const empty = cards.querySelector('.kanban-empty');
+  if (empty) empty.remove();
+  cards.appendChild(draggedCard);
+
+  // Retirer le placeholder vide de la colonne source
+  const srcCards = sourceCol.querySelector('.kanban-cards');
+  if (srcCards.querySelectorAll('.kanban-card').length === 0) {
+    const e2 = document.createElement('div');
+    e2.className = 'kanban-empty';
+    e2.textContent = 'Aucune';
+    srcCards.appendChild(e2);
+  }
+
+  // Mettre à jour les compteurs
+  updateCount(sourceCol);
+  updateCount(col);
+
+  // Persister en base
+  const fd = new FormData();
+  fd.append('id', id);
+  fd.append('statut', newStatut);
+  fetch('/interventions/statut', { method: 'POST', body: fd })
+    .catch(() => {
+      // En cas d'erreur : remettre la carte dans la colonne source
+      const srcCards2 = sourceCol.querySelector('.kanban-cards');
+      srcCards2.appendChild(draggedCard);
+      updateCount(sourceCol);
+      updateCount(col);
+    });
+
+  draggedCard = null;
+}
+
+function updateCount(col) {
+  const count = col.querySelectorAll('.kanban-card').length;
+  col.querySelector('.kanban-count').textContent = count;
+}
+</script>
+{{end}}

@@ -1,0 +1,81 @@
+{{define "content"}}
+{{$d := .Data}}
+{{$p := $d.Piece}}
+
+<div class="page-header">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="/stock" class="btn btn-secondary btn-sm">← Retour</a>
+    <h2 class="page-title">Modifier — {{$p.Nom}}</h2>
+  </div>
+</div>
+
+<div class="page-body">
+  {{if .Error}}<div class="alert alert-error" style="margin-bottom:12px;">{{.Error}}</div>{{end}}
+
+  <div class="card" style="max-width:640px;">
+    <div class="card-body">
+      <form method="POST" action="/stock/edit">
+        <input type="hidden" name="id" value="{{$p.ID}}">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nom *</label>
+            <input type="text" name="nom" value="{{$p.Nom}}" required>
+          </div>
+          <div class="form-group">
+            <label>Référence</label>
+            <input type="text" name="reference" value="{{$p.Reference}}">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Catégorie</label>
+            <input type="text" name="categorie" value="{{$p.Categorie}}" list="cats-list">
+            <datalist id="cats-list">
+              {{range $d.Categories}}<option value="{{.}}">{{end}}
+            </datalist>
+          </div>
+          <div class="form-group">
+            <label>Fournisseur</label>
+            <input type="text" name="fournisseur" value="{{$p.Fournisseur}}">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Quantité en stock</label>
+            <input type="number" name="quantite_stock" value="{{$p.QuantiteStock}}" min="0">
+          </div>
+          <div class="form-group">
+            <label>Seuil d'alerte</label>
+            <input type="number" name="seuil_alerte" value="{{$p.SeuilAlerte}}" min="0">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Prix d'achat (DZD)</label>
+            <input type="number" name="prix_achat" value="{{$p.PrixAchat}}" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Prix de vente (DZD)</label>
+            <input type="number" name="prix_vente" value="{{$p.PrixVente}}" min="0" step="0.01">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea name="notes" rows="3">{{$p.Notes}}</textarea>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+          <a href="/stock" class="btn btn-secondary">Annuler</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{{end}}

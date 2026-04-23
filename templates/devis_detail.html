@@ -1,0 +1,212 @@
+{{define "content"}}
+{{$dv := .Data}}
+
+<div class="page-header">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <a href="/devis" class="btn btn-secondary btn-sm">← Retour</a>
+    <h2 class="page-title">{{$dv.Numero}}</h2>
+    {{template "devisStatutBadge" $dv.Statut}}
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <a href="/devis/print?id={{$dv.ID}}" target="_blank" class="btn btn-secondary btn-sm">
+      📄 {{if eq $dv.Statut "accepte"}}Imprimer OR{{else}}Imprimer devis{{end}}
+    </a>
+    <button class="btn btn-secondary btn-sm" onclick="toggleModal('modal-email')">✉ Envoyer par email</button>
+    {{if eq $dv.Statut "accepte"}}
+    <button class="btn btn-primary btn-sm" onclick="toggleModal('modal-facturer')">💶 Générer facture</button>
+    {{end}}
+  </div>
+</div>
+
+<div class="page-body">
+  {{if .Error}}<div class="alert alert-error">{{.Error}}</div>{{end}}
+  {{if .Success}}<div class="alert alert-success">{{.Success}}</div>{{end}}
+
+  <!-- Changement de statut (sauf si déjà facturé) -->
+  {{if ne $dv.Statut "facture"}}
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-body" style="padding:12px 20px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:13px;font-weight:500;color:var(--text-lt);">Changer le statut :</span>
+        {{range $s := slice "envoye" "accepte" "refuse" "brouillon"}}
+        {{if ne $s $dv.Statut}}
+        <form method="POST" action="/devis/statut" style="display:inline;">
+          <input type="hidden" name="id" value="{{$dv.ID}}">
+          <button type="submit" name="statut" value="{{$s}}" class="btn btn-secondary btn-sm">
+            {{if eq $s "envoye"}}→ Envoyé
+            {{else if eq $s "accepte"}}✓ Accepté (OR)
+            {{else if eq $s "refuse"}}✗ Refusé
+            {{else}}↩ Brouillon{{end}}
+          </button>
+        </form>
+        {{end}}
+        {{end}}
+        {{if eq $dv.Statut "brouillon"}}
+        <form method="POST" action="/devis/delete" style="display:inline;"
+              onsubmit="return confirm('Supprimer ce brouillon ?')">
+          <input type="hidden" name="id" value="{{$dv.ID}}">
+          <button type="submit" class="btn btn-danger btn-sm">Supprimer brouillon</button>
+        </form>
+        {{end}}
+      </div>
+    </div>
+  </div>
+  {{end}}
+
+  <!-- Infos générales -->
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Client &amp; Véhicule</span></div>
+      <div class="card-body">
+        <table style="width:100%;">
+          <tr><td style="color:var(--text-lt);padding:3px 0;width:110px;">Client</td><td><strong>{{$dv.ClientNom}}</strong></td></tr>
+          {{if $dv.ClientTel}}<tr><td style="color:var(--text-lt);padding:3px 0;">Téléphone</td><td>{{$dv.ClientTel}}</td></tr>{{end}}
+          <tr><td style="color:var(--text-lt);padding:3px 0;">Immatriculation</td><td><strong style="font-family:monospace;">{{$dv.Immatriculation}}</strong></td></tr>
+          <tr><td style="color:var(--text-lt);padding:3px 0;">Véhicule</td><td>{{$dv.VehiculeLabel}}</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Dates &amp; Règlement</span></div>
+      <div class="card-body">
+        <table style="width:100%;">
+          <tr><td style="color:var(--text-lt);padding:3px 0;width:120px;">Date</td><td>{{dateFR $dv.DateCreation}}</td></tr>
+          {{if $dv.DateValidite}}<tr><td style="color:var(--text-lt);padding:3px 0;">Validité</td><td>{{dateFR $dv.DateValidite}}</td></tr>{{end}}
+          <tr><td style="color:var(--text-lt);padding:3px 0;">Règlement</td><td>{{$dv.ModeReglement}}</td></tr>
+          <tr><td style="color:var(--text-lt);padding:3px 0;">Montant TTC</td><td><strong class="money" style="font-size:16px;">{{dzd $dv.MontantTTC}}</strong></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lignes -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Détail des prestations</span></div>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr>
+          <th>Type</th><th>Désignation</th>
+          <th style="text-align:right;">Qté</th>
+          <th style="text-align:right;">P.U. HT</th>
+          <th style="text-align:right;">TVA %</th>
+          <th style="text-align:right;">Total HT</th>
+          <th style="text-align:right;">TVA</th>
+          <th style="text-align:right;">TTC</th>
+        </tr></thead>
+        <tbody>
+        {{range $dv.Lignes}}
+        <tr>
+          <td><span class="badge badge-secondary" style="font-size:11px;">{{ligneTypeLabel .Type}}</span></td>
+          <td>{{.Designation}}</td>
+          <td style="text-align:right;">{{.Quantite}}</td>
+          <td style="text-align:right;" class="money">{{printf "%.2f" .PrixUnitHT}}</td>
+          <td style="text-align:right;">{{printf "%.0f" .TVATaux}} %</td>
+          <td style="text-align:right;" class="money">{{printf "%.2f" .MontantHT}}</td>
+          <td style="text-align:right;" class="money">{{printf "%.2f" .MontantTVA}}</td>
+          <td style="text-align:right;font-weight:600;" class="money">{{printf "%.2f" .MontantTTC}} DZD</td>
+        </tr>
+        {{end}}
+        </tbody>
+        <tfoot>
+          <tr style="background:#f8fafc;">
+            <td colspan="5" style="text-align:right;font-weight:600;padding:10px 16px;color:var(--text-lt);">Total HT</td>
+            <td style="text-align:right;font-weight:700;padding:10px 16px;" class="money" colspan="3">{{printf "%.2f" $dv.MontantHT}} DZD</td>
+          </tr>
+          <tr style="background:#f8fafc;">
+            <td colspan="5" style="text-align:right;font-weight:600;padding:6px 16px;color:var(--text-lt);">TVA</td>
+            <td style="text-align:right;font-weight:700;padding:6px 16px;" class="money" colspan="3">{{printf "%.2f" $dv.MontantTVA}} DZD</td>
+          </tr>
+          <tr style="background:var(--primary);color:white;">
+            <td colspan="5" style="text-align:right;font-weight:700;padding:10px 16px;">TOTAL TTC</td>
+            <td style="text-align:right;font-weight:700;padding:10px 16px;font-size:15px;" colspan="3">{{dzd $dv.MontantTTC}}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal facturation -->
+<div class="modal-overlay" id="modal-facturer" style="display:none;" onclick="closeModalOutside(event,'modal-facturer')">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <span class="modal-title">Émettre la facture officielle</span>
+      <button class="modal-close" onclick="toggleModal('modal-facturer')">×</button>
+    </div>
+    <form method="POST" action="/devis/facturer">
+      <div class="modal-body">
+        <input type="hidden" name="id" value="{{$dv.ID}}">
+        <div class="form-group">
+          <label>Mode de règlement</label>
+          <select name="mode_reglement">
+            <option value="especes">Espèces</option>
+            <option value="cheque">Chèque</option>
+            <option value="virement">Virement bancaire</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date d'échéance (optionnel)</label>
+          <input type="date" name="date_echeance">
+        </div>
+        <div class="form-group">
+          <label>NIF client (si professionnel)</label>
+          <input type="text" name="client_nif" placeholder="Laisser vide si particulier">
+        </div>
+        <div class="alert alert-success" style="margin:0;">
+          La facture sera <strong>immuable</strong> une fois émise (loi anti-fraude).<br>
+          Montant TTC : <strong>{{dzd $dv.MontantTTC}}</strong>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="toggleModal('modal-facturer')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Émettre la facture</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal : Envoyer par email -->
+<div class="modal-overlay" id="modal-email" style="display:none;" onclick="closeModalOutside(event,'modal-email')">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header">
+      <span class="modal-title">Envoyer le devis par email</span>
+      <button class="modal-close" onclick="toggleModal('modal-email')">×</button>
+    </div>
+    <form method="POST" action="/devis/email">
+      <div class="modal-body">
+        <input type="hidden" name="id" value="{{$dv.ID}}">
+        <div class="form-group">
+          <label>Adresse email du destinataire *</label>
+          <input type="email" name="email" required value="{{$dv.ClientEmail}}"
+                 placeholder="client@example.com">
+        </div>
+        <div class="form-group" style="margin-top:10px;">
+          <label>Message (optionnel)</label>
+          <textarea name="message" rows="4"
+                    placeholder="Bonjour, veuillez trouver ci-joint votre devis..."></textarea>
+          <small style="color:var(--text-lt);font-size:11px;">Laissez vide pour le message par défaut.</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="toggleModal('modal-email')">Annuler</button>
+        <button type="submit" class="btn btn-primary">✉ Envoyer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function toggleModal(id) { const m=document.getElementById(id); m.style.display=m.style.display==='none'?'flex':'none'; }
+function closeModalOutside(e,id){ if(e.target.id===id) toggleModal(id); }
+</script>
+{{end}}
+
+{{define "devisStatutBadge"}}
+{{if eq . "brouillon"}}<span class="badge badge-secondary">Brouillon</span>
+{{else if eq . "envoye"}}<span class="badge badge-info">Envoyé</span>
+{{else if eq . "accepte"}}<span class="badge badge-warning">Accepté / OR</span>
+{{else if eq . "refuse"}}<span class="badge badge-danger">Refusé</span>
+{{else if eq . "facture"}}<span class="badge badge-success">Facturé</span>
+{{else}}<span class="badge badge-secondary">{{.}}</span>{{end}}
+{{end}}

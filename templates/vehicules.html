@@ -1,0 +1,148 @@
+{{define "content"}}
+{{$d := .Data}}
+
+<div class="page-header">
+  <h2 class="page-title">Véhicules</h2>
+  <button class="btn btn-primary" onclick="toggleModal('modal-new-veh')">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+    Ajouter un véhicule
+  </button>
+</div>
+
+<div class="page-body">
+
+  {{if .Error}}<div class="alert alert-error">{{.Error}}</div>{{end}}
+  {{if .Success}}<div class="alert alert-success">{{.Success}}</div>{{end}}
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">{{len $d.Vehicules}} véhicule(s)</span>
+    </div>
+    {{if $d.Vehicules}}
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Immatriculation</th>
+            <th>Marque / Modèle</th>
+            <th>Année</th>
+            <th>Kilométrage</th>
+            <th>VIN</th>
+            <th>Propriétaire</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range $d.Vehicules}}
+          <tr>
+            <td><strong style="font-family:monospace;letter-spacing:1px;">{{.Immatriculation}}</strong></td>
+            <td>{{.Marque}} {{.Modele}}</td>
+            <td>{{if .Annee}}{{.Annee}}{{else}}—{{end}}</td>
+            <td>{{if .Kilometrage}}{{.Kilometrage}} km{{else}}—{{end}}</td>
+            <td style="font-size:12px;color:var(--text-light);">{{if .VIN}}{{.VIN}}{{else}}—{{end}}</td>
+            <td>{{.ClientNom}}</td>
+            <td>
+              <div style="display:flex;gap:4px;">
+                <a href="/vehicules/view?id={{.ID}}" class="btn btn-secondary btn-sm">Fiche</a>
+                <a href="/vehicules/edit?id={{.ID}}" class="btn btn-secondary btn-sm">Modifier</a>
+                <form method="POST" action="/vehicules/delete" style="display:inline;"
+                      onsubmit="return confirm('Supprimer ce véhicule et toutes ses interventions ?')">
+                  <input type="hidden" name="id" value="{{.ID}}">
+                  <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+    {{else}}
+    <div class="table-empty">
+      <p>Aucun véhicule enregistré.</p>
+      {{if $d.Clients}}
+      <button class="btn btn-primary" style="margin-top:12px;" onclick="toggleModal('modal-new-veh')">
+        Ajouter le premier véhicule
+      </button>
+      {{else}}
+      <p style="margin-top:8px;font-size:12px;"><a href="/clients">Créez d'abord un client</a> avant d'ajouter un véhicule.</p>
+      {{end}}
+    </div>
+    {{end}}
+  </div>
+
+</div>
+
+<!-- ═══ Modal : Nouveau véhicule ═══ -->
+<div class="modal-overlay" id="modal-new-veh" style="display:none;" onclick="closeModalOutside(event,'modal-new-veh')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Nouveau véhicule</span>
+      <button class="modal-close" onclick="toggleModal('modal-new-veh')">×</button>
+    </div>
+    <form method="POST" action="/vehicules">
+      <div class="modal-body">
+
+        <div class="form-group">
+          <label>Propriétaire *</label>
+          <select name="client_id" required>
+            <option value="">-- Sélectionner un client --</option>
+            {{range $d.Clients}}
+            <option value="{{.ID}}">{{.Nom}} {{.Prenom}}</option>
+            {{end}}
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Marque *</label>
+            <input type="text" name="marque" placeholder="ex : Renault" required>
+          </div>
+          <div class="form-group">
+            <label>Modèle *</label>
+            <input type="text" name="modele" placeholder="ex : Symbol" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Immatriculation *</label>
+            <input type="text" name="immatriculation" placeholder="12345-16" required
+                   style="text-transform:uppercase;">
+          </div>
+          <div class="form-group">
+            <label>Année</label>
+            <input type="number" name="annee" placeholder="2018" min="1960" max="2030">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Kilométrage (km)</label>
+            <input type="number" name="kilometrage" placeholder="75000" min="0">
+          </div>
+          <div class="form-group">
+            <label>VIN (N° de série)</label>
+            <input type="text" name="vin" placeholder="VF1AA..." maxlength="17">
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="toggleModal('modal-new-veh')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function toggleModal(id) {
+  const m = document.getElementById(id);
+  m.style.display = m.style.display === 'none' ? 'flex' : 'none';
+}
+function closeModalOutside(e, id) {
+  if (e.target.id === id) toggleModal(id);
+}
+</script>
+{{end}}

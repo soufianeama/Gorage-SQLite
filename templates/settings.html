@@ -1,0 +1,471 @@
+{{define "content"}}
+{{$s := .Data.S}}
+{{$users := .Data.Users}}
+
+<div class="page-header">
+  <h2 class="page-title">Paramètres</h2>
+</div>
+
+<div class="page-body">
+
+  {{if .Error}}<div class="alert alert-error" style="margin-bottom:12px;">{{.Error}}</div>{{end}}
+  {{if .Success}}<div class="alert alert-success" style="margin-bottom:12px;">{{.Success}}</div>{{end}}
+
+  <!-- Onglets -->
+  <div class="settings-tabs">
+    <button class="settings-tab active" onclick="showTab('garage', this)">Garage</button>
+    <button class="settings-tab" onclick="showTab('facturation', this)">Facturation</button>
+    <button class="settings-tab" onclick="showTab('atelier', this)">Atelier</button>
+    <button class="settings-tab" onclick="showTab('compte', this)">Compte</button>
+    <button class="settings-tab" onclick="showTab('donnees', this)">Données</button>
+    <button class="settings-tab" onclick="showTab('email', this)">Email</button>
+    <button class="settings-tab" onclick="showTab('utilisateurs', this)">Utilisateurs</button>
+  </div>
+
+  <!-- ═══ Onglet Garage ═══ -->
+  <div class="settings-panel" id="tab-garage">
+    <div class="card" style="max-width:580px;">
+      <div class="card-header"><span class="card-title">Informations du garage</span></div>
+      <div class="card-body">
+        <form method="POST" action="/settings">
+
+          <div class="form-group">
+            <label for="nom_garage">Nom du garage *</label>
+            <input type="text" id="nom_garage" name="nom_garage"
+                   value="{{index $s "nom_garage"}}"
+                   placeholder="Mon Garage Auto" required>
+          </div>
+
+          <div class="form-group">
+            <label for="adresse_garage">Adresse</label>
+            <input type="text" id="adresse_garage" name="adresse_garage"
+                   value="{{index $s "adresse_garage"}}"
+                   placeholder="Rue Emir Abdelkader, Kouba">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="telephone_garage">Téléphone</label>
+              <input type="tel" id="telephone_garage" name="telephone_garage"
+                     value="{{index $s "telephone_garage"}}"
+                     placeholder="0555 123 456">
+            </div>
+            <div class="form-group">
+              <label for="ville_garage">Ville / Wilaya</label>
+              <input type="text" id="ville_garage" name="ville_garage"
+                     value="{{index $s "ville_garage"}}"
+                     placeholder="Alger — Algérie">
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <p style="font-size:12px;color:var(--text-lt);margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">
+            Identifiants fiscaux
+          </p>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nif">NIF</label>
+              <input type="text" id="nif" name="nif"
+                     value="{{index $s "nif"}}" placeholder="000012345678901">
+            </div>
+            <div class="form-group">
+              <label for="nis">NIS</label>
+              <input type="text" id="nis" name="nis"
+                     value="{{index $s "nis"}}" placeholder="0990000123456789">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="rc">RC — Registre du Commerce</label>
+              <input type="text" id="rc" name="rc"
+                     value="{{index $s "rc"}}" placeholder="16/00-1234567B05">
+            </div>
+            <div class="form-group">
+              <label for="ai">AI — Article d'Imposition</label>
+              <input type="text" id="ai" name="ai"
+                     value="{{index $s "ai"}}" placeholder="12345678">
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <p style="font-size:12px;color:var(--text-lt);margin-bottom:10px;font-weight:500;">APERÇU EN-TÊTE FACTURE</p>
+          <div style="background:var(--primary);color:white;border-radius:8px;padding:14px 18px;margin-bottom:16px;">
+            <div style="font-size:15px;font-weight:700;" id="prev-nom">{{index $s "nom_garage"}}</div>
+            <div style="font-size:11px;margin-top:4px;opacity:.85;" id="prev-adresse">{{index $s "adresse_garage"}}</div>
+            <div style="font-size:11px;opacity:.85;" id="prev-tel">{{index $s "telephone_garage"}}</div>
+            <div style="font-size:11px;opacity:.85;" id="prev-ville">{{index $s "ville_garage"}}</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+            Enregistrer
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Onglet Facturation ═══ -->
+  <div class="settings-panel" id="tab-facturation" style="display:none;">
+    <div class="card" style="max-width:580px;">
+      <div class="card-header"><span class="card-title">Paramètres de facturation</span></div>
+      <div class="card-body">
+        <form method="POST" action="/settings">
+          <div class="form-group">
+            <label>Taux TVA par défaut</label>
+            <select name="tva_taux_defaut">
+              <option value="0"  {{if eq (index $s "tva_taux_defaut") "0"}}selected{{end}}>0 %</option>
+              <option value="9"  {{if eq (index $s "tva_taux_defaut") "9"}}selected{{end}}>9 %</option>
+              <option value="19" {{if or (eq (index $s "tva_taux_defaut") "19") (eq (index $s "tva_taux_defaut") "")}}selected{{end}}>19 %</option>
+            </select>
+            <small style="color:var(--text-lt);font-size:12px;">Appliqué par défaut sur les nouvelles lignes de devis et factures.</small>
+          </div>
+          <div class="form-group" style="margin-top:8px;">
+            <label>Délai de validité des devis (jours)</label>
+            <input type="number" name="delai_validite_devis" min="1" max="365"
+                   value="{{if index $s "delai_validite_devis"}}{{index $s "delai_validite_devis"}}{{else}}30{{end}}">
+            <small style="color:var(--text-lt);font-size:12px;">La date de validité est calculée automatiquement à la création d'un devis.</small>
+          </div>
+
+          <div class="form-group" style="margin-top:8px;">
+            <label>Mentions légales (bas de facture)</label>
+            <textarea name="mentions_legales" rows="3"
+                      placeholder="Ex : TVA non applicable — Article 293B du CGI&#10;Pénalités de retard : 3× le taux légal...">{{index $s "mentions_legales"}}</textarea>
+            <small style="color:var(--text-lt);font-size:12px;">Apparaît en bas de chaque facture et devis PDF.</small>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+            Enregistrer
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Onglet Atelier ═══ -->
+  <div class="settings-panel" id="tab-atelier" style="display:none;">
+    <div class="card" style="max-width:580px;">
+      <div class="card-header"><span class="card-title">Heures d'ouverture</span></div>
+      <div class="card-body">
+        <form method="POST" action="/settings">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Ouverture</label>
+              <select name="heure_ouverture">
+                {{range slice "06" "07" "08" "09" "10"}}
+                <option value="{{.}}" {{if eq (index $s "heure_ouverture") .}}selected{{end}}>{{.}}h00</option>
+                {{end}}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Fermeture</label>
+              <select name="heure_fermeture">
+                {{range slice "16" "17" "18" "19" "20" "21"}}
+                <option value="{{.}}" {{if eq (index $s "heure_fermeture") .}}selected{{end}}>{{.}}h00</option>
+                {{end}}
+              </select>
+            </div>
+          </div>
+          <small style="color:var(--text-lt);font-size:12px;display:block;margin-bottom:14px;">
+            Détermine les créneaux disponibles dans le calendrier des rendez-vous.
+          </small>
+          <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+            Enregistrer
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Onglet Compte ═══ -->
+  <div class="settings-panel" id="tab-compte" style="display:none;">
+    <div class="card" style="max-width:580px;">
+      <div class="card-header"><span class="card-title">Changer le mot de passe</span></div>
+      <div class="card-body">
+        <form method="POST" action="/settings/password">
+          <div class="form-group">
+            <label>Mot de passe actuel</label>
+            <input type="password" name="ancien_mdp" required autocomplete="current-password">
+          </div>
+          <div class="form-group">
+            <label>Nouveau mot de passe</label>
+            <input type="password" name="nouveau_mdp" required minlength="6" autocomplete="new-password"
+                   placeholder="6 caractères minimum">
+          </div>
+          <div class="form-group">
+            <label>Confirmer le nouveau mot de passe</label>
+            <input type="password" name="confirm_mdp" required autocomplete="new-password">
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+            Modifier le mot de passe
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Onglet Données ═══ -->
+  <div class="settings-panel" id="tab-donnees" style="display:none;">
+    <div class="card" style="max-width:580px;margin-bottom:20px;">
+      <div class="card-header"><span class="card-title">Sauvegarde locale</span></div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--text-lt);margin-bottom:14px;">
+          Télécharge une copie complète de la base de données. À conserver en lieu sûr.
+        </p>
+        <a href="/backup" class="btn btn-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+          Télécharger gorage.db
+        </a>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:580px;">
+      <div class="card-header"><span class="card-title">Sauvegarde cloud (S3 / R2 / B2)</span></div>
+      <div class="card-body">
+        <div class="alert" style="background:#f0f9ff;border:1px solid #bae6fd;color:#0c4a6e;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:16px;">
+          Compatible avec <strong>Cloudflare R2</strong>, <strong>Backblaze B2</strong>, <strong>AWS S3</strong> et tout stockage compatible S3.
+          Pour Cloudflare R2 : endpoint = <code>https://&lt;account_id&gt;.r2.cloudflarestorage.com</code>, région = <code>auto</code>.
+        </div>
+        <form method="POST" action="/settings">
+          <div class="form-group">
+            <label>Endpoint S3</label>
+            <input type="text" name="s3_endpoint"
+                   value="{{index $s "s3_endpoint"}}"
+                   placeholder="https://xxx.r2.cloudflarestorage.com">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Bucket</label>
+              <input type="text" name="s3_bucket"
+                     value="{{index $s "s3_bucket"}}"
+                     placeholder="gorage-backups">
+            </div>
+            <div class="form-group">
+              <label>Région</label>
+              <input type="text" name="s3_region"
+                     value="{{index $s "s3_region"}}"
+                     placeholder="auto">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Access Key ID</label>
+              <input type="text" name="s3_access_key"
+                     value="{{index $s "s3_access_key"}}"
+                     placeholder="Clé d'accès">
+            </div>
+            <div class="form-group">
+              <label>Secret Access Key</label>
+              <input type="password" name="s3_secret_key"
+                     value="{{index $s "s3_secret_key"}}"
+                     placeholder="••••••••••••••••">
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:4px;">
+            <button type="submit" class="btn btn-secondary">Enregistrer</button>
+          </div>
+        </form>
+        <hr style="margin:20px 0;border:none;border-top:1px solid var(--border);">
+        <p style="font-size:13px;color:var(--text-lt);margin-bottom:12px;">
+          Lance une sauvegarde immédiate vers le bucket configuré.
+        </p>
+        <form method="POST" action="/backup/cloud">
+          <button type="submit" class="btn btn-primary"
+                  {{if not (index $s "s3_endpoint")}}disabled title="Configurez d'abord le stockage cloud"{{end}}>
+            ☁ Sauvegarder vers le cloud
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Onglet Email ═══ -->
+  <div class="settings-panel" id="tab-email" style="display:none;">
+    <div class="card" style="max-width:580px;">
+      <div class="card-header"><span class="card-title">Configuration SMTP</span></div>
+      <div class="card-body">
+        <div class="alert" style="background:#fefce8;border:1px solid #fde047;color:#854d0e;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:16px;">
+          ⚠ Le mot de passe est stocké en clair dans la base de données. Pour Gmail, utilisez un <strong>App Password</strong> (Compte Google → Sécurité → Mots de passe des applications).
+        </div>
+        <form method="POST" action="/settings">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Serveur SMTP</label>
+              <input type="text" name="smtp_host"
+                     value="{{index $s "smtp_host"}}"
+                     placeholder="smtp.gmail.com">
+            </div>
+            <div class="form-group">
+              <label>Port</label>
+              <select name="smtp_port">
+                <option value="587" {{if eq (index $s "smtp_port") "587"}}selected{{end}}>587 (STARTTLS)</option>
+                <option value="465" {{if eq (index $s "smtp_port") "465"}}selected{{end}}>465 (SSL)</option>
+                <option value="25"  {{if eq (index $s "smtp_port") "25"}} selected{{end}}>25</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Utilisateur</label>
+              <input type="text" name="smtp_user"
+                     value="{{index $s "smtp_user"}}"
+                     placeholder="mon.garage@gmail.com">
+            </div>
+            <div class="form-group">
+              <label>Mot de passe</label>
+              <input type="password" name="smtp_password"
+                     value="{{index $s "smtp_password"}}"
+                     placeholder="App Password">
+            </div>
+          </div>
+          <hr class="divider">
+          <p style="font-size:12px;color:var(--text-lt);margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Expéditeur</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nom affiché</label>
+              <input type="text" name="smtp_from_name"
+                     value="{{index $s "smtp_from_name"}}"
+                     placeholder="L'Atelier Go">
+            </div>
+            <div class="form-group">
+              <label>Adresse d'envoi</label>
+              <input type="email" name="smtp_from_email"
+                     value="{{index $s "smtp_from_email"}}"
+                     placeholder="noreply@mongarage.dz">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+            Enregistrer
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Onglet Utilisateurs ═══ -->
+  <div class="settings-panel" id="tab-utilisateurs" style="display:none;">
+    <div class="card" style="max-width:580px;margin-bottom:16px;">
+      <div class="card-header"><span class="card-title">Comptes utilisateurs</span></div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr>
+            <th>Utilisateur</th>
+            <th>Rôle</th>
+            <th>Créé le</th>
+            <th></th>
+          </tr></thead>
+          <tbody>
+          {{range $users}}
+          <tr>
+            <td><strong>{{.Username}}</strong></td>
+            <td>
+              {{if eq .Role "admin"}}
+              <span class="badge badge-info">Admin</span>
+              {{else}}
+              <span class="badge badge-secondary">Mécanicien</span>
+              {{end}}
+            </td>
+            <td style="font-size:12px;color:var(--text-lt);">{{.CreatedAt}}</td>
+            <td>
+              {{if ne .Username $.Session.Username}}
+              <form method="POST" action="/settings/users/delete" onsubmit="return confirm('Supprimer cet utilisateur ?')">
+                <input type="hidden" name="id" value="{{.ID}}">
+                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+              </form>
+              {{else}}
+              <span style="font-size:12px;color:var(--text-lt);">Vous</span>
+              {{end}}
+            </td>
+          </tr>
+          {{end}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:580px;">
+      <div class="card-header"><span class="card-title">Créer un utilisateur</span></div>
+      <div class="card-body">
+        <form method="POST" action="/settings/users/create">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nom d'utilisateur *</label>
+              <input type="text" name="username" required placeholder="ali.mechta">
+            </div>
+            <div class="form-group">
+              <label>Rôle</label>
+              <select name="role">
+                <option value="mecanicien">Mécanicien</option>
+                <option value="admin">Administrateur</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Mot de passe *</label>
+            <input type="password" name="password" required minlength="6" placeholder="6 caractères minimum">
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Créer le compte
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<style>
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0;
+}
+.settings-tab {
+  background: none;
+  border: none;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-lt);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  border-radius: 4px 4px 0 0;
+  transition: color .15s;
+}
+.settings-tab:hover { color: var(--text); }
+.settings-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+</style>
+
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.settings-panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.settings-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).style.display = '';
+  btn.classList.add('active');
+}
+
+// Aperçu en temps réel
+['nom_garage','adresse_garage','telephone_garage','ville_garage'].forEach(id => {
+  const inp = document.getElementById(id);
+  const prev = document.getElementById('prev-' + id.replace('_garage',''));
+  if (inp && prev) inp.addEventListener('input', () => prev.textContent = inp.value || '—');
+});
+
+// Restaurer l'onglet actif après sauvegarde
+const hash = location.hash.replace('#','');
+const validTabs = ['garage','facturation','atelier','compte','donnees','email','utilisateurs'];
+if (hash && validTabs.includes(hash)) {
+  const btn = document.querySelector(`.settings-tab[onclick*="${hash}"]`);
+  if (btn) showTab(hash, btn);
+}
+</script>
+{{end}}

@@ -1,0 +1,75 @@
+{{define "content"}}
+{{$d := .Data}}
+{{$v := $d.Vehicule}}
+
+<div class="page-header">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="/vehicules" class="btn btn-secondary btn-sm">← Retour</a>
+    <h2 class="page-title">Modifier — <span style="font-family:monospace;">{{$v.Immatriculation}}</span></h2>
+  </div>
+</div>
+
+<div class="page-body">
+  {{if .Error}}<div class="alert alert-error" style="margin-bottom:12px;">{{.Error}}</div>{{end}}
+
+  <div class="card" style="max-width:580px;">
+    <div class="card-body">
+      <form method="POST" action="/vehicules/edit">
+        <input type="hidden" name="id" value="{{$v.ID}}">
+
+        <div class="form-group">
+          <label>Propriétaire *</label>
+          <select name="client_id" required>
+            <option value="">-- Sélectionner --</option>
+            {{range $d.Clients}}
+            <option value="{{.ID}}" {{if eq .ID $v.ClientID}}selected{{end}}>{{.Nom}} {{.Prenom}}</option>
+            {{end}}
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Marque *</label>
+            <input type="text" name="marque" value="{{$v.Marque}}" required>
+          </div>
+          <div class="form-group">
+            <label>Modèle *</label>
+            <input type="text" name="modele" value="{{$v.Modele}}" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Immatriculation *</label>
+            <input type="text" name="immatriculation" value="{{$v.Immatriculation}}"
+                   required style="text-transform:uppercase;">
+          </div>
+          <div class="form-group">
+            <label>Année</label>
+            <input type="number" name="annee" value="{{if $v.Annee}}{{$v.Annee}}{{end}}"
+                   min="1960" max="2030">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Kilométrage (km)</label>
+            <input type="number" name="kilometrage"
+                   value="{{if $v.Kilometrage}}{{$v.Kilometrage}}{{end}}" min="0">
+          </div>
+          <div class="form-group">
+            <label>VIN (N° de série)</label>
+            <input type="text" name="vin" value="{{$v.VIN}}" maxlength="17">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+          <a href="/vehicules" class="btn btn-secondary">Annuler</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{{end}}

@@ -1,0 +1,103 @@
+{{define "content"}}
+{{$rdv := .Data}}
+
+<div class="page-header">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="/rdv" class="btn btn-secondary btn-sm">← Retour</a>
+    <h2 class="page-title">Rendez-vous — {{$rdv.ClientNom}}</h2>
+  </div>
+  <span class="badge {{rdvStatutClass $rdv.Statut}}" style="font-size:13px;padding:6px 14px;">
+    {{rdvStatutLabel $rdv.Statut}}
+  </span>
+</div>
+
+<div class="page-body">
+
+  {{if .Error}}<div class="alert alert-error" style="margin-bottom:12px;">{{.Error}}</div>{{end}}
+  {{if .Success}}<div class="alert alert-success" style="margin-bottom:12px;">{{.Success}}</div>{{end}}
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+
+    <!-- Bloc Client -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">Client</span></div>
+      <div class="card-body">
+        <table class="info-table">
+          <tr><td>Nom</td><td><strong>{{$rdv.ClientNom}}</strong></td></tr>
+          {{if $rdv.ClientTel}}<tr><td>Téléphone</td><td>{{$rdv.ClientTel}}</td></tr>{{end}}
+        </table>
+      </div>
+    </div>
+
+    <!-- Bloc Véhicule -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">Véhicule</span></div>
+      <div class="card-body">
+        <table class="info-table">
+          <tr><td>Immatriculation</td><td><strong style="font-family:monospace;">{{$rdv.Immatriculation}}</strong></td></tr>
+          <tr><td>Modèle</td><td>{{$rdv.Marque}} {{$rdv.Modele}}</td></tr>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Détails du RDV -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header"><span class="card-title">Détails du rendez-vous</span></div>
+    <div class="card-body">
+      <table class="info-table">
+        <tr><td>Date</td><td><strong>{{dateFR $rdv.DateRDV}}</strong></td></tr>
+        <tr><td>Heure</td><td><strong>{{$rdv.HeureRDV}}</strong></td></tr>
+        <tr><td>Durée estimée</td><td>{{$rdv.DureeMin}} minutes</td></tr>
+        <tr><td>Motif</td><td>{{$rdv.Motif}}</td></tr>
+        {{if $rdv.Notes}}<tr><td>Notes</td><td>{{$rdv.Notes}}</td></tr>{{end}}
+      </table>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="card">
+    <div class="card-body">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+
+        {{if eq $rdv.Statut "planifie"}}
+        <form method="POST" action="/rdv/statut" style="display:inline;">
+          <input type="hidden" name="id" value="{{$rdv.ID}}">
+          <button type="submit" name="statut" value="confirme" class="btn btn-primary">
+            ✓ Confirmer le RDV
+          </button>
+        </form>
+        {{end}}
+
+        {{if or (eq $rdv.Statut "planifie") (eq $rdv.Statut "confirme")}}
+        <form method="POST" action="/rdv/statut" style="display:inline;">
+          <input type="hidden" name="id" value="{{$rdv.ID}}">
+          <button type="submit" name="statut" value="annule" class="btn btn-secondary"
+                  onclick="return confirm('Annuler ce rendez-vous ?')">
+            Annuler le RDV
+          </button>
+        </form>
+        {{end}}
+
+        <form method="POST" action="/rdv/delete" style="display:inline;">
+          <input type="hidden" name="id" value="{{$rdv.ID}}">
+          <button type="submit" class="btn btn-danger"
+                  onclick="return confirm('Supprimer définitivement ce RDV ?')">
+            Supprimer
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<style>
+.info-table { width:100%; border-collapse:collapse; }
+.info-table td { padding:7px 4px; border-bottom:1px solid var(--border); font-size:13px; }
+.info-table td:first-child { color:var(--text-lt); width:40%; }
+.info-table tr:last-child td { border-bottom:none; }
+</style>
+{{end}}

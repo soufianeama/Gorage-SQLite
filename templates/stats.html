@@ -1,0 +1,153 @@
+{{define "content"}}
+{{$d := .Data}}
+
+<div class="page-header">
+  <h2 class="page-title">Statistiques</h2>
+</div>
+
+<div class="page-body">
+
+  <!-- ═══ Interventions par mois ═══ -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><span class="card-title">Interventions par mois (12 derniers mois)</span></div>
+    <div class="card-body" style="padding:20px 24px 12px;">
+      {{if $d.Interventions}}
+      <div class="chart-bar-wrap">
+        {{range $d.Interventions}}
+        <div class="chart-col">
+          <div class="chart-bar-value">{{if .Count}}{{.Count}}{{end}}</div>
+          <div class="chart-bar-outer">
+            <div class="chart-bar-inner" style="height:{{printf "%.1f" .Pct}}%;"></div>
+          </div>
+          <div class="chart-bar-label">{{.Label}}</div>
+        </div>
+        {{end}}
+      </div>
+      {{else}}
+      <p style="color:var(--text-lt);font-size:13px;">Aucune donnée disponible.</p>
+      {{end}}
+    </div>
+  </div>
+
+  <!-- ═══ Pièces les plus utilisées ═══ -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Top 10 pièces utilisées (devis &amp; factures)</span></div>
+    <div class="card-body" style="padding:16px 24px;">
+      {{if $d.Pieces}}
+      <div class="chart-hbar-wrap">
+        {{range $d.Pieces}}
+        <div class="chart-hbar-row">
+          <div class="chart-hbar-label" title="{{.Designation}}">{{.Designation}}</div>
+          <div class="chart-hbar-track">
+            <div class="chart-hbar-fill" style="width:{{printf "%.1f" .Pct}}%;"></div>
+          </div>
+          <div class="chart-hbar-val">{{printf "%.0f" .Total}}</div>
+        </div>
+        {{end}}
+      </div>
+      {{else}}
+      <p style="color:var(--text-lt);font-size:13px;">Aucune pièce dans les devis ou factures.</p>
+      {{end}}
+    </div>
+  </div>
+
+</div>
+
+<style>
+/* ── Graphique vertical (interventions par mois) ── */
+.chart-bar-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 200px;
+  padding-bottom: 28px;
+  position: relative;
+}
+.chart-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+.chart-bar-value {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-lt);
+  height: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.chart-bar-outer {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 2px;
+}
+.chart-bar-inner {
+  width: 100%;
+  background: var(--primary);
+  border-radius: 4px 4px 0 0;
+  min-height: 2px;
+  transition: height .3s ease;
+}
+.chart-bar-label {
+  font-size: 10px;
+  color: var(--text-lt);
+  margin-top: 5px;
+  white-space: nowrap;
+  position: absolute;
+  bottom: 0;
+}
+/* réajustement pour que les labels soient sous chaque barre */
+.chart-bar-wrap { position: relative; }
+.chart-col { position: relative; }
+.chart-bar-label { position: static; }
+
+/* ── Graphique horizontal (pièces) ── */
+.chart-hbar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.chart-hbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.chart-hbar-label {
+  width: 180px;
+  font-size: 12px;
+  color: var(--dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+.chart-hbar-track {
+  flex: 1;
+  height: 18px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.chart-hbar-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 4px;
+  min-width: 2px;
+  transition: width .3s ease;
+}
+.chart-hbar-val {
+  width: 36px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-lt);
+  text-align: right;
+  flex-shrink: 0;
+}
+</style>
+{{end}}

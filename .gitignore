@@ -1,0 +1,16 @@
+# Base de données SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# Binaires
+gorage
+gorage.exe
+
+# Variables d'environnement
+.env
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp

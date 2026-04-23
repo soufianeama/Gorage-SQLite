@@ -1,0 +1,225 @@
+{{define "content"}}
+{{$d := .Data}}
+
+<div class="page-header">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="/devis" class="btn btn-secondary btn-sm">← Retour</a>
+    <h2 class="page-title">Nouveau devis</h2>
+  </div>
+</div>
+
+<div class="page-body">
+<form method="POST" action="/devis" id="devis-form">
+
+  <!-- ── En-tête ── -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header"><span class="card-title">Informations générales</span></div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Client *</label>
+          <select name="client_id" id="sel-client" required onchange="filterVehicules()">
+            <option value="">-- Sélectionner un client --</option>
+            {{range $d.Clients}}<option value="{{.ID}}">{{.Nom}} {{.Prenom}}</option>{{end}}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Véhicule *</label>
+          <select name="vehicule_id" id="sel-vehicule" required>
+            <option value="">-- Sélectionner d'abord un client --</option>
+            {{range $d.Vehicules}}<option value="{{.ID}}" data-client="{{.ClientID}}">{{.Immatriculation}} — {{.Marque}} {{.Modele}}</option>{{end}}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date du devis *</label>
+          <input type="date" name="date_creation" value="{{$d.Today}}" required>
+        </div>
+        <div class="form-group">
+          <label>Date de validité</label>
+          <input type="date" name="date_validite" value="{{$d.DateValidite}}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description générale (optionnel)</label>
+        <textarea name="description" rows="2" placeholder="Ex : Révision générale 60 000 km..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Lignes ── -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header">
+      <span class="card-title">Détail des prestations</span>
+      <button type="button" class="btn btn-primary btn-sm" onclick="addLigne()">
+        + Ajouter une ligne
+      </button>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <div class="table-wrapper">
+        <table id="lignes-table">
+          <thead><tr>
+            <th style="width:140px;">Type</th>
+            <th>Désignation</th>
+            <th style="width:90px;">Qté</th>
+            <th style="width:140px;">P.U. HT (DA)</th>
+            <th style="width:100px;text-align:right;">TVA %</th>
+            <th style="width:100px;text-align:right;">Total HT</th>
+            <th style="width:108px;text-align:right;">TTC</th>
+            <th style="width:36px;"></th>
+          </tr></thead>
+          <tbody id="lignes-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Totaux -->
+    <div style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;">
+      <div style="min-width:280px;">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;color:var(--text-lt);">
+          <span>Total HT :</span><strong id="total-ht">0,00 DZD</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;color:var(--text-lt);">
+          <span>TVA :</span><strong id="total-tva">0,00 DZD</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--primary);color:white;border-radius:8px;margin-top:6px;">
+          <span style="font-weight:700;">TOTAL TTC :</span>
+          <strong id="total-ttc">0,00 DZD</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden totaux -->
+  <input type="hidden" name="montant_ht"  id="h-ht">
+  <input type="hidden" name="montant_tva" id="h-tva">
+  <input type="hidden" name="montant_ttc" id="h-ttc">
+
+  <!-- ── Pied ── -->
+  <div class="card">
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Mode de règlement</label>
+          <select name="mode_reglement">
+            <option value="especes">Espèces</option>
+            <option value="cheque">Chèque</option>
+            <option value="virement">Virement bancaire</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Notes internes</label>
+          <input type="text" name="notes" placeholder="Remarques, conditions...">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button type="submit" class="btn btn-primary">Créer le devis</button>
+        <a href="/devis" class="btn btn-secondary">Annuler</a>
+      </div>
+    </div>
+  </div>
+
+</form>
+</div>
+
+<script>
+// ── Filtrage véhicules par client ────────────────────────
+function filterVehicules() {
+  const clientID = document.getElementById('sel-client').value;
+  const selV     = document.getElementById('sel-vehicule');
+  const opts     = selV.querySelectorAll('option[data-client]');
+  let visible    = 0;
+
+  selV.value = '';
+  opts.forEach(opt => {
+    const show = !clientID || opt.dataset.client === clientID;
+    opt.style.display = show ? '' : 'none';
+    opt.disabled      = !show;
+    if (show) visible++;
+  });
+
+  // Placeholder adapté
+  selV.options[0].text = clientID
+    ? (visible ? '-- Sélectionner un véhicule --' : '-- Aucun véhicule pour ce client --')
+    : '-- Sélectionner d\'abord un client --';
+
+  // Si un seul véhicule, le sélectionner automatiquement
+  if (visible === 1) {
+    opts.forEach(opt => { if (!opt.disabled) selV.value = opt.value; });
+  }
+}
+
+// Lancer au chargement si client déjà sélectionné (retour arrière navigateur)
+document.addEventListener('DOMContentLoaded', () => {
+  if (document.getElementById('sel-client').value) filterVehicules();
+});
+
+let ligneCount = 0;
+
+function addLigne(t='main_oeuvre', d='', q=1, p=0, tva=19) {
+  const tbody = document.getElementById('lignes-body');
+  const tr = document.createElement('tr');
+  tr.style.borderBottom = '1px solid var(--border)';
+  tr.innerHTML = `
+    <td style="padding:8px 12px;">
+      <select name="ligne_type[]" onchange="recalc()" style="width:100%;">
+        <option value="main_oeuvre"  ${t==='main_oeuvre' ?'selected':''}>Main d'œuvre</option>
+        <option value="piece"        ${t==='piece'       ?'selected':''}>Pièce</option>
+        <option value="fourniture"   ${t==='fourniture'  ?'selected':''}>Fourniture</option>
+        <option value="autre"        ${t==='autre'       ?'selected':''}>Autre</option>
+      </select>
+    </td>
+    <td style="padding:8px 12px;">
+      <input type="text" name="ligne_designation[]" value="${d}" placeholder="Désignation..." required style="width:100%;min-width:120px;">
+    </td>
+    <td style="padding:8px 12px;">
+      <input type="number" name="ligne_qte[]" value="${q}" min="0.01" step="0.01" style="width:100%;" oninput="recalc()">
+    </td>
+    <td style="padding:8px 12px;">
+      <input type="number" name="ligne_prix[]" value="${p}" min="0" step="50" style="width:100%;" oninput="recalc()">
+    </td>
+    <td style="padding:8px 12px;">
+      <select name="ligne_tva[]" onchange="recalc()" style="width:100%;">
+        <option value="0"  ${tva===0  ?'selected':''}>0 %</option>
+        <option value="9"  ${tva===9  ?'selected':''}>9 %</option>
+        <option value="19" ${tva===19 ?'selected':''}>19 %</option>
+      </select>
+    </td>
+    <td class="lig-ht" style="padding:8px 12px;text-align:right;white-space:nowrap;color:var(--text-lt);">—</td>
+    <td class="lig-ttc" style="padding:8px 12px;text-align:right;white-space:nowrap;font-weight:600;">—</td>
+    <td style="padding:8px 6px;text-align:center;">
+      <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove();recalc();" title="Supprimer">×</button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+  ligneCount++;
+  recalc();
+}
+
+function recalc() {
+  let sHT=0, sTVA=0;
+  document.querySelectorAll('#lignes-body tr').forEach(tr => {
+    const q   = parseFloat(tr.querySelector('[name="ligne_qte[]"]')?.value)  || 0;
+    const p   = parseFloat(tr.querySelector('[name="ligne_prix[]"]')?.value) || 0;
+    const tva = parseFloat(tr.querySelector('[name="ligne_tva[]"]')?.value)  || 0;
+    const ht  = q * p, tv = ht * tva / 100;
+    tr.querySelector('.lig-ht').textContent  = ht.toFixed(2) + ' DZD';
+    tr.querySelector('.lig-ttc').textContent = (ht+tv).toFixed(2) + ' DZD';
+    sHT += ht; sTVA += tv;
+  });
+  const sTTC = sHT + sTVA;
+  document.getElementById('total-ht').textContent  = sHT.toFixed(2)  + ' DZD';
+  document.getElementById('total-tva').textContent = sTVA.toFixed(2) + ' DZD';
+  document.getElementById('total-ttc').textContent = sTTC.toFixed(2) + ' DZD';
+  document.getElementById('h-ht').value  = sHT.toFixed(2);
+  document.getElementById('h-tva').value = sTVA.toFixed(2);
+  document.getElementById('h-ttc').value = sTTC.toFixed(2);
+}
+
+const TVA_DEFAUT = {{if $d.TVADefaut}}{{$d.TVADefaut}}{{else}}19{{end}};
+
+// Démarrer avec une ligne vide
+addLigne('main_oeuvre', '', 1, 0, TVA_DEFAUT);
+</script>
+{{end}}

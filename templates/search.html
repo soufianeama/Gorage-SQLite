@@ -1,0 +1,94 @@
+{{define "content"}}
+{{$d := .Data}}
+
+<div class="page-header">
+  <h2 class="page-title">Recherche</h2>
+</div>
+
+<div class="page-body">
+
+  <!-- Barre de recherche -->
+  <form method="GET" action="/search" style="display:flex;gap:8px;margin-bottom:20px;max-width:480px;">
+    <input type="text" name="q" value="{{$d.Query}}"
+           placeholder="Client, immatriculation, téléphone..."
+           style="flex:1;" autofocus>
+    <button type="submit" class="btn btn-primary">Rechercher</button>
+  </form>
+
+  {{if $d.Query}}
+
+  {{$totalClients  := len $d.Clients}}
+  {{$totalVehicules := len $d.Vehicules}}
+
+  {{if and (eq $totalClients 0) (eq $totalVehicules 0)}}
+  <div class="card">
+    <div class="table-empty">
+      <p>Aucun résultat pour <strong>«&nbsp;{{$d.Query}}&nbsp;»</strong>.</p>
+    </div>
+  </div>
+  {{end}}
+
+  <!-- Clients -->
+  {{if $d.Clients}}
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header">
+      <span class="card-title">Clients ({{$totalClients}})</span>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr>
+          <th>Nom</th>
+          <th>Téléphone</th>
+          <th>Email</th>
+          <th></th>
+        </tr></thead>
+        <tbody>
+          {{range $d.Clients}}
+          <tr>
+            <td><strong>{{.Nom}} {{.Prenom}}</strong></td>
+            <td>{{if .Telephone}}{{.Telephone}}{{else}}—{{end}}</td>
+            <td style="font-size:12px;color:var(--text-lt);">{{if .Email}}{{.Email}}{{else}}—{{end}}</td>
+            <td><a href="/clients" class="btn btn-secondary btn-sm">Voir</a></td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {{end}}
+
+  <!-- Véhicules -->
+  {{if $d.Vehicules}}
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Véhicules ({{$totalVehicules}})</span>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr>
+          <th>Immatriculation</th>
+          <th>Marque / Modèle</th>
+          <th>Année</th>
+          <th>Propriétaire</th>
+          <th></th>
+        </tr></thead>
+        <tbody>
+          {{range $d.Vehicules}}
+          <tr>
+            <td><strong style="font-family:monospace;">{{.Immatriculation}}</strong></td>
+            <td>{{.Marque}} {{.Modele}}</td>
+            <td>{{if .Annee}}{{.Annee}}{{else}}—{{end}}</td>
+            <td>{{.ClientNom}}</td>
+            <td><a href="/vehicules/view?id={{.ID}}" class="btn btn-secondary btn-sm">Fiche</a></td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {{end}}
+
+  {{end}}{{/* fin if $d.Query */}}
+
+</div>
+{{end}}

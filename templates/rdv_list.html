@@ -1,0 +1,267 @@
+{{define "content"}}
+{{$d := .Data}}
+
+<div class="page-header">
+  <h2 class="page-title">Rendez-vous</h2>
+  <button class="btn btn-primary" onclick="toggleModal('modal-new-rdv')">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+    Nouveau RDV
+  </button>
+</div>
+
+<div class="page-body">
+
+  {{if .Error}}<div class="alert alert-error" style="margin-bottom:12px;">{{.Error}}</div>{{end}}
+  {{if .Success}}<div class="alert alert-success" style="margin-bottom:12px;">{{.Success}}</div>{{end}}
+
+  <!-- Toggle vue -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+    <a href="/rdv?vue=calendrier&semaine={{$d.Semaine}}"
+       class="btn btn-sm {{if eq $d.Vue "calendrier"}}btn-primary{{else}}btn-secondary{{end}}">
+      Calendrier
+    </a>
+    <a href="/rdv?vue=liste&statut={{$d.FiltreStatut}}"
+       class="btn btn-sm {{if eq $d.Vue "liste"}}btn-primary{{else}}btn-secondary{{end}}">
+      Liste
+    </a>
+  </div>
+
+  {{if eq $d.Vue "calendrier"}}
+  <!-- ═══ VUE CALENDRIER ═══ -->
+  <div class="card" style="overflow:hidden;">
+    <div class="card-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <a href="/rdv?vue=calendrier&semaine={{$d.SemainePrev}}" class="btn btn-secondary btn-sm">◀</a>
+        <span class="card-title" style="min-width:200px;text-align:center;">{{$d.SemaineTitre}}</span>
+        <a href="/rdv?vue=calendrier&semaine={{$d.SemaineNext}}" class="btn btn-secondary btn-sm">▶</a>
+        <a href="/rdv?vue=calendrier" class="btn btn-secondary btn-sm">Aujourd'hui</a>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="toggleModal('modal-new-rdv')">+ RDV</button>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table class="cal-table">
+        <thead>
+          <tr>
+            <th class="cal-th-time"></th>
+            {{range $d.WeekDays}}
+            <th class="cal-th-day{{if .IsToday}} today{{end}}">
+              <div class="cal-day-name">{{.JourFR}}</div>
+              <div class="cal-day-date">{{.DateFR}} {{.MoisFR}}</div>
+            </th>
+            {{end}}
+          </tr>
+        </thead>
+        <tbody>
+          {{range $hour := $d.Heures}}
+          <tr>
+            <td class="cal-hour-td">{{$hour}}h</td>
+            {{range $d.WeekDays}}
+            <td class="cal-slot-td{{if .IsToday}} today{{end}}"
+                data-date="{{.Date}}" data-heure="{{$hour}}:00"
+                onclick="cellClick(event, this)">
+              {{range .Cards}}{{if eq .HeureH $hour}}
+              <a class="cal-slot-event rdv-{{.Statut}}" href="/rdv/view?id={{.ID}}"
+                 onclick="event.stopPropagation()">
+                <div class="ev-header">
+                  <span class="ev-time">{{.HeureRDV}}</span>
+                  <span class="ev-immat">{{.Immatriculation}}</span>
+                </div>
+                <div class="ev-client">{{.ClientNom}}</div>
+                <div class="ev-motif">{{.Motif}}</div>
+              </a>
+              {{end}}{{end}}
+            </td>
+            {{end}}
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {{else}}
+  <!-- ═══ VUE LISTE ═══ -->
+  <div class="filter-bar" style="margin-bottom:12px;">
+    <span style="font-size:13px;color:var(--text-lt);font-weight:500;">Filtrer :</span>
+    <a href="/rdv?vue=liste" class="btn btn-sm {{if eq $d.FiltreStatut ""}}btn-primary{{else}}btn-secondary{{end}}">Tous</a>
+    <a href="/rdv?vue=liste&statut=planifie" class="btn btn-sm {{if eq $d.FiltreStatut "planifie"}}btn-primary{{else}}btn-secondary{{end}}">Planifiés</a>
+    <a href="/rdv?vue=liste&statut=confirme" class="btn btn-sm {{if eq $d.FiltreStatut "confirme"}}btn-primary{{else}}btn-secondary{{end}}">Confirmés</a>
+    <a href="/rdv?vue=liste&statut=annule" class="btn btn-sm {{if eq $d.FiltreStatut "annule"}}btn-primary{{else}}btn-secondary{{end}}">Annulés</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">{{len $d.AllRDVs}} rendez-vous</span>
+    </div>
+    {{if $d.AllRDVs}}
+    <div class="table-wrapper">
+      <table>
+        <thead><tr>
+          <th>Date</th>
+          <th>Heure</th>
+          <th>Client</th>
+          <th>Véhicule</th>
+          <th>Motif</th>
+          <th>Durée</th>
+          <th>Statut</th>
+          <th></th>
+        </tr></thead>
+        <tbody>
+          {{range $d.AllRDVs}}
+          <tr>
+            <td>{{dateFR .DateRDV}}</td>
+            <td style="font-weight:600;">{{.HeureRDV}}</td>
+            <td>
+              {{.ClientNom}}
+              {{if .ClientTel}}<br><small style="color:var(--text-lt);">{{.ClientTel}}</small>{{end}}
+            </td>
+            <td>
+              <strong style="font-family:monospace;">{{.Immatriculation}}</strong><br>
+              <small style="color:var(--text-lt);">{{.Marque}} {{.Modele}}</small>
+            </td>
+            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{.Motif}}</td>
+            <td>{{.DureeMin}} min</td>
+            <td><span class="badge {{rdvStatutClass .Statut}}">{{rdvStatutLabel .Statut}}</span></td>
+            <td><a href="/rdv/view?id={{.ID}}" class="btn btn-secondary btn-sm">Voir</a></td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+    {{else}}
+    <div class="table-empty">
+      <p>Aucun rendez-vous{{if $d.FiltreStatut}} avec ce statut{{end}}.</p>
+      <button class="btn btn-primary" style="margin-top:12px;" onclick="toggleModal('modal-new-rdv')">
+        Créer un RDV
+      </button>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+
+</div>
+
+<!-- ═══ Modal : Nouveau RDV ═══ -->
+<div class="modal-overlay" id="modal-new-rdv" style="display:none;" onclick="closeModalOutside(event,'modal-new-rdv')">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-header">
+      <span class="modal-title">Nouveau rendez-vous</span>
+      <button class="modal-close" onclick="toggleModal('modal-new-rdv')">×</button>
+    </div>
+    <form method="POST" action="/rdv">
+      <div class="modal-body">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Client *</label>
+            <select name="client_id" id="rdv-sel-client" required onchange="rdvFilterVehicules()">
+              <option value="">-- Sélectionner --</option>
+              {{range $d.Clients}}<option value="{{.ID}}">{{.Nom}} {{.Prenom}}</option>{{end}}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Véhicule *</label>
+            <select name="vehicule_id" id="rdv-sel-vehicule" required>
+              <option value="">-- Choisir client d'abord --</option>
+              {{range $d.Vehicules}}<option value="{{.ID}}" data-client="{{.ClientID}}">{{.Immatriculation}} — {{.Marque}} {{.Modele}}</option>{{end}}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date *</label>
+            <input type="date" name="date_rdv" value="{{today}}" required>
+          </div>
+          <div class="form-group">
+            <label>Heure *</label>
+            <select name="heure_rdv" required>
+              {{range $d.Creneaux}}
+              <option value="{{.}}">{{.}}</option>
+              {{end}}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Durée estimée</label>
+            <select name="duree_min">
+              <option value="30">30 min</option>
+              <option value="60" selected>1 heure</option>
+              <option value="90">1h 30</option>
+              <option value="120">2 heures</option>
+              <option value="180">3 heures</option>
+              <option value="240">4 heures</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Motif *</label>
+            <input type="text" name="motif" placeholder="Ex : Révision, vidange..." required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea name="notes" rows="2" placeholder="Informations complémentaires..."></textarea>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="toggleModal('modal-new-rdv')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Créer le RDV</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function toggleModal(id) {
+  const m = document.getElementById(id);
+  m.style.display = m.style.display === 'none' ? 'flex' : 'none';
+}
+function closeModalOutside(e, id) {
+  if (e.target.id === id) toggleModal(id);
+}
+
+// Clic sur une cellule vide du calendrier → ouvre le modal pré-rempli
+function cellClick(e, cell) {
+  // Ne pas ouvrir si clic sur un RDV existant
+  if (e.target.closest('.cal-slot-event')) return;
+  // Ne pas ouvrir si la cellule contient déjà un RDV
+  if (cell.querySelector('.cal-slot-event')) return;
+
+  const date  = cell.dataset.date;
+  const heure = cell.dataset.heure;
+
+  document.querySelector('[name="date_rdv"]').value = date;
+  const sel = document.querySelector('[name="heure_rdv"]');
+  sel.value = heure;
+  // Fallback si l'heure exacte n'est pas dans la liste
+  if (!sel.value) sel.options[0].selected = true;
+
+  toggleModal('modal-new-rdv');
+}
+
+function rdvFilterVehicules() {
+  const clientID = document.getElementById('rdv-sel-client').value;
+  const selV     = document.getElementById('rdv-sel-vehicule');
+  const opts     = selV.querySelectorAll('option[data-client]');
+  let visible    = 0;
+  selV.value = '';
+  opts.forEach(opt => {
+    const show = !clientID || opt.dataset.client === clientID;
+    opt.style.display = show ? '' : 'none';
+    opt.disabled      = !show;
+    if (show) visible++;
+  });
+  selV.options[0].text = clientID
+    ? (visible ? '-- Sélectionner un véhicule --' : '-- Aucun véhicule --')
+    : '-- Choisir client d\'abord --';
+  if (visible === 1) {
+    opts.forEach(opt => { if (!opt.disabled) selV.value = opt.value; });
+  }
+}
+</script>
+{{end}}

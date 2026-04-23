@@ -1,0 +1,60 @@
+{{define "404"}}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page introuvable — Gorage</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/app.css">
+  <style>
+    .notfound-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+    }
+    .notfound-card {
+      text-align: center;
+      padding: 48px 40px;
+      max-width: 420px;
+    }
+    .notfound-code {
+      font-size: 96px;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+      letter-spacing: -4px;
+      margin-bottom: 8px;
+    }
+    .notfound-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 10px;
+    }
+    .notfound-desc {
+      font-size: 14px;
+      color: var(--text-lt);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+<div class="notfound-page">
+  <div class="notfound-card">
+    <div class="notfound-code">404</div>
+    <div class="notfound-title">Page introuvable</div>
+    <p class="notfound-desc">
+      La page que vous cherchez n'existe pas ou a été déplacée.
+    </p>
+    <a href="/" class="btn btn-primary" style="justify-content:center;">
+      ← Retour à l'accueil
+    </a>
+  </div>
+</div>
+</body>
+</html>
+{{end}}
