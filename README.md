@@ -167,4 +167,4 @@ gorage/
 
 ## Licence
 
-Projet privé — tous droits réservés.
+GPL
