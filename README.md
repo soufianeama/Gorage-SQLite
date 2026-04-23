@@ -1,4 +1,4 @@
-# L'Atelier Go
+# Gorage
 
 Logiciel de gestion de garage automobile, développé en Go. Application web locale, sans dépendance externe au runtime — un seul binaire suffit.
 
