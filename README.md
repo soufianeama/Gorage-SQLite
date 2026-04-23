@@ -81,7 +81,7 @@ Logiciel de gestion de garage automobile, développé en Go. Application web loc
 ### Cloner et lancer
 
 ```bash
-git clone https://github.com/votre-utilisateur/gorage.git
+git clone https://github.com/soufianeama/Gorage-SQLite.git
 cd gorage
 go run .
 ```
