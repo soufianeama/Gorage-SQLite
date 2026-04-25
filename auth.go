@@ -155,6 +155,7 @@ func setSessionCookie(w http.ResponseWriter, sid string) {
 		Value:    sid,
 		Path:     "/",
 		HttpOnly: true,
+		Secure:   true,
 		MaxAge:   int(sessionDuration.Seconds()),
 		SameSite: http.SameSiteStrictMode,
 	})
@@ -166,6 +167,7 @@ func clearSessionCookie(w http.ResponseWriter) {
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
+		Secure:   true,
 		MaxAge:   -1,
 	})
 }
